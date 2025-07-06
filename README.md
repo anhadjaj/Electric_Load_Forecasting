@@ -1,76 +1,91 @@
-# ⚡ Electric Load Forecasting
-This project focuses on predicting short-term electric load across England and Wales using enriched SCADA data and weather information. The final model achieves MAPE: 0.71% and MASE: 0.260, implying an average prediction accuracy of 99.29%, occasionally exceeding 99.85% on individual days.
+⚡ Electric Load Forecasting
+==================================
+This project focuses on predicting short-term electric load across England and Wales using enriched SCADA data and weather information. The final model achieves:
+
+  • MAPE: 0.71%
+  • MASE: 0.260
+  → Implies average prediction accuracy of 99.29%, occasionally exceeding 99.85% on individual days.
 
 📊 Dataset
-Raw SCADA Data: https://drive.google.com/file/d/1ABKyShwOpOo4zCg6T_BYoKGUl9t6LqYs/view?usp=drive_link
+----------------------------
+• Raw SCADA Data: 
+  https://drive.google.com/file/d/1ABKyShwOpOo4zCg6T_BYoKGUl9t6LqYs/view?usp=drive_link
 
-Preprocessing & Enrichment Script: All preprocessing, feature engineering, and weather merging are performed in modify_csv.py.
+• Preprocessing Script: 
+  All preprocessing, feature engineering, and weather merging are done in `modify_csv.py`.
 
---> 🌦️ Weather Data Integration
-Historical weather data was fetched from the Open-Meteo API using the following parameters:
-> Latitude/Longitude: (52.5, -1.5) — Center of England & Wales
-> Hourly features added:
-  -temperature_2m
-  -relative_humidity_2m
-  -dew_point_2m
-  -wind_speed_10m
-  -cloud_cover
-  -shortwave_radiation
-  -surface_pressure
-  -Time zone: Europe/London
-> Merged with demand data based on timestamps for robust multi-modal forecasting.
+🌦️ Weather Data Integration
+----------------------------
+Historical weather data was fetched from Open-Meteo API:
 
---> Feature Engineering
-The final dataset includes over 80+ engineered features, including:
+• Coordinates: (52.5, -1.5) — Center of England & Wales
+• Hourly features:
+  - temperature_2m
+  - relative_humidity_2m
+  - dew_point_2m
+  - wind_speed_10m
+  - cloud_cover
+  - shortwave_radiation
+  - surface_pressure
+  - time zone: Europe/London
 
-> 🕓 Time & Seasonality
-  -Hour, quarter, day of week, month
-  -Fourier features (daily, weekly, yearly)
-  -Sinusoidal encodings for cyclic time and day-of-year
+• Merged with load data using timestamps for multi-modal forecasting.
 
-> Lag & Rolling Features
-  -Demand lags: 15 min to 5 days
-  -Rolling stats (mean, std, min, max, skew) over 1–3 days
-  -Exponential weighted moving averages
-  -Trend deltas over 3h and 6h
+🔧 Feature Engineering
+----------------------------
+Final dataset includes 80+ engineered features:
 
-> 🌧️ Weather Lag Features
-  -Weather lags (2, 3, 5 days) for each feature
-  -Demand x weather interactions
+🕓 Time & Seasonality
+  - Hour, quarter, weekday, month
+  - Fourier terms: daily, weekly, yearly
+  - Sinusoidal encodings
 
-> Flags & Categorical Encodings
-  -Peak-hour flag
-  -Holiday/weekend flag
-  -High-demand and spike indicators
-  -One-hot encoded hour buckets (morning, afternoon, etc.)
+📈 Lag & Rolling Features
+  - Demand lags: 15 min to 5 days
+  - Rolling mean, std, min, max, skew (1–3 days)
+  - EWM averages and trend deltas (3h, 6h)
 
-> ⚙️ Model & Training
-Model Used
-  -LightGBM Regressor
-  -n_estimators=200
-  -max_depth=15
-  -learning_rate=0.05
+🌧️ Weather Lag Features
+  - Weather lags (2, 3, 5 days)
+  - Interaction terms: demand × weather
 
-> Training Details
-  -15-minute resolution
-  -Non-shuffled time-series split (80% train / 20% test)
-  -Target: england_wales_demand
+🔁 Flags & Categorical Encodings
+  - Peak-hour flag, holiday/weekend flag
+  - High-demand and spike detection
+  - One-hot hour buckets (e.g., morning, afternoon)
 
-> 📈 Evaluation Metrics
-Metric	Description	Value
-  -MAPE	Mean Absolute Percentage Error	0.71% (Accuracy = 99.29 %)
-  -MASE	Mean Absolute Scaled Error (vs naïve)	0.260
+⚙️ Model & Training
+----------------------------
+• Model: LightGBM Regressor
+  - n_estimators = 200
+  - max_depth = 15
+  - learning_rate = 0.05
 
-> The model substantially outperforms a naive 1-step lag baseline and demonstrates high accuracy even during high-variance periods like holidays and peak demand.
+• Training Strategy:
+  - Time resolution: 15 minutes
+  - TimeSeriesSplit (80% train / 20% test)
+  - Target variable: england_wales_demand
 
-> 📅 Daily Visualization
-A random day is sampled from the test set to:
-  -Plot actual vs predicted demand (96 time blocks)
-  -Highlight if it's a holiday
-  -Compute per-day MAPE & MASE
+📈 Evaluation Metrics
+----------------------------
+| Metric | Description                    | Value   |
+|--------|--------------------------------|---------|
+| MAPE   | Mean Absolute % Error          | 0.71 %  |
+| MASE   | Mean Absolute Scaled Error     | 0.260   |
 
-> Future Extensions
-  -Real-time prediction dashboard
-  -Integration with grid response systems
-  -Anomaly detection during holidays or storm periods
-  -Incorporation of solar/wind generation capacity data
+✅ Outperforms naive 1-step lag model.
+✅ Maintains high accuracy during holidays and peaks.
+
+📅 Daily Visualization
+----------------------------
+Each test day includes:
+  - 96 time block predictions vs actuals
+  - Holiday flag & annotations
+  - Per-day MAPE & MASE computation
+
+🔮 Future Extensions
+----------------------------
+• Real-time dashboard with live forecasts
+• Integration with grid/load balancing systems
+• Anomaly detection for holiday/storm loads
+• Include solar/wind generation forecasts
